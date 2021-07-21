@@ -431,7 +431,7 @@ class DisplayMgr:
 
 @app.route('/', methods=['GET'])
 def home():
-    return "<p>This api automates the classrooms and lecturer usage by course.</p>"
+    return "<p>Work!\nThis api automates the classrooms and lecturer usage by course.</p>"
 
 if __name__ == "__main__":
     app.run()
