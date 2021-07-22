@@ -416,22 +416,23 @@ class DisplayMgr:
         # prettytable.PrettyTable(['Class no.', 'Dept', 'Course (number, max no. of students)',
         #                                 'Room (Capacity)', 'Instructor (Id)',  'Meeting Time (Id)'])
         for i in range(0, len(classes)):
-            table.append({"result": [{"no": str(i)}, {"dept": classes[i].get_dept().get_name()}, {"course": classes[i].get_course().get_name() + " (" +
+            table.append({"result": {"no": str(i), "dept": classes[i].get_dept().get_name(), "course": classes[i].get_course().get_name() + " (" +
                           classes[i].get_course().get_number() + ", " +
                           str(classes[len(classes) -
-                                      1].get_course().get_maxNumbOfStudents()) + ")", },
-                {"Room": classes[i].get_room().get_number() + " (" + str(
-                    classes[i].get_room().get_seatingCapacity()) + ")", },
-                {"instructor": classes[i].get_instructor().get_name() + " (" +
-                 str(classes[len(classes) -
-                             1].get_instructor().get_id()) + ")", },
-                {"time": classes[i].get_meetingTime().get_time() + " (" + str(classes[i].get_meetingTime().get_id()) + ")"}]})
+                                      1].get_course().get_maxNumbOfStudents()) + ")",
+                          "Room": classes[i].get_room().get_number() + " (" + str(
+                classes[i].get_room().get_seatingCapacity()) + ")",
+                "instructor": classes[i].get_instructor().get_name() + " (" +
+                str(classes[len(classes) -
+                            1].get_instructor().get_id()) + ")",
+                "time": classes[i].get_meetingTime().get_time() + " (" + str(classes[i].get_meetingTime().get_id()) + ")"}})
         return jsonify({"data": table})
 
 
 @app.route('/', methods=['GET'])
 def home():
     return "<p>Work!\nThis api automates the classrooms and lecturer usage by course.</p>"
+
 
 if __name__ == "__main__":
     app.run()
