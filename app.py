@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import random as rnd
+import re
 POPULATION_SIZE = 9
 NUMB_OF_ELITE_SCHEDULES = 1
 TOURNAMENT_SELECTION_SIZE = 3
@@ -13,7 +14,8 @@ app.config["DEBUG"] = True
 def table():
     global data
     content = request.json
-    data = Data(content["meetingTime"], content["instructors"])
+    data = Data(content["meetingTime"], content["instructors"],
+                content["courses"], content["members"])
     # print (content['mytext'])
     displayMgr = DisplayMgr()
     displayMgr.print_available_data()
@@ -36,39 +38,16 @@ def table():
 
 class Data:
     # Here we declare the classroom number and the maximum student capacity of the students
-    ROOMS = [["33-501", 70], ["34-203", 35]]
+    ROOMS = [["93-501", 70], ["34-203", 35]]
 
     # Here we declare the meeting times, in which a class can hold, here MT1, MT2 means meeting 1, meeting 2 and so on. MWF, TTH etc. means Monday, Wednesday, Friday
-    # MEETING_TIMES = [["MT1", "MWF 09:00 - 10:00"],
-    #                  ["MT2", "MWF 10:00 - 11:00"],
-    #                  ["MT3", "MWF 11:00 - 12:00"],
-    #                  ["MT4", "MWF 13:00 - 14:00"],
-    #                  ["MT5", "MWF 14:00 - 15:00"],
-    #                  ["MT6", "MWF 15:00 - 16:00"],
-    #                  ["MT7", "MWF 16:00 - 17:00"],
-    #                  ["MT8", "TTH 09:00 - 10:00"],
-    #                  ["MT9", "TTH 10:00 - 11:00"],
-    #                  ["MT10", "TTH 11:00 - 12:00"],
-    #                  ["MT11", "TTH 13:00 - 14:00"],
-    #                  ["MT12", "TTH 14:00 - 15:00"],
-    #                  ["MT13", "TTH 15:00 - 16:00"],
-    #                  ["MT14", "TTH 16:00 - 17:00"]]
-
-    # Here we declare the professors name
-    # INSTRUCTORS = [["AP1", "Ms. Jasleen Kaur"],
-    #                ["AP2", "Mr. Tarun"],
-    #                ["AP3", "Ms. Suruchi Talwani"],
-    #                ["AP4", "Mr. Arun Kochar"],
-    #                ["AP5", "Ms. Priya"],
-    #                ["AP6", "Dr. Priyanka Chawla"],
-    #                ["AP7", "Mr. Sudha Shankar Prasad"],
-    #                ["AP8", "Mr. Pankaj Kumar Keshri"]]
 
     # Defining Constructor
-    def __init__(self, times, instructors):
+    def __init__(self, times, instructors, course, members):
         self._rooms = []
         self._meetingTimes = []
         self._instructors = []
+        self._depts = []
         self.MEETING_TIMES = times
         self.INSTRUCTORS = instructors
 
@@ -84,25 +63,40 @@ class Data:
                 self.INSTRUCTORS[i][0], self.INSTRUCTORS[i][1]))
 
         # Assigning instructors or professors to each course with params (courseid, coursename, instructors inside an array, max. students allowed in course)
-        course1 = Course("C1", "INT404", [self._instructors[0]], 70)
-        course2 = Course("C2", "CSE408", [self._instructors[1]], 70)
+        course1 = Course("C1", course[0], [self._instructors[0]], members[0])
+        course2 = Course("C2", course[1], [self._instructors[1]], members[1])
         # For Practical or Lab periods assign students are 35 only
-        course3 = Course("C3", "CSE325", [self._instructors[2]], 35)
-        course4 = Course("C4", "MTH302", [self._instructors[3]], 70)
-        course5 = Course("C5", "CSE316", [self._instructors[2]], 70)
-        course6 = Course("C6", "PEV106", [self._instructors[4]], 70)
-        course7 = Course("C7", "CSE306", [self._instructors[5]], 70)
-        course8 = Course("C8", "CSE310", [self._instructors[6]], 70)
+        course3 = Course("C3", course[2], [self._instructors[2]], members[2])
+        course4 = Course("C4", course[3], [self._instructors[3]], members[3])
+        course5 = Course("C5", course[4], [self._instructors[2]], members[4])
+        course6 = Course("C6", course[5], [self._instructors[4]], members[5])
+        course7 = Course("C7", course[6], [self._instructors[5]], members[6])
+        course8 = Course("C8", course[7], [self._instructors[6]], members[7])
         # Here also for practical lab
-        course9 = Course("C9", "CSE307", [self._instructors[7]], 35)
+        course9 = Course("C9", course[8], [self._instructors[7]], members[8])
         self._courses = [course1, course2, course3, course4,
                          course5, course6, course7, course8, course9]
 
-        dept1 = Department(
-            "CSE", [course1, course2, course3, course4, course5, course8])
-        dept2 = Department("CPE", [course6])
-        dept3 = Department("ECE", [course7, course9])
-        self._depts = [dept1, dept2, dept3]
+        # remove the numbers
+        pattern = r'[0-9]'
+
+        for i in self._courses:
+
+            if len(self._depts) == 0:
+                self._depts.append(Department(
+                    re.sub(pattern, '', i.get_name()), [i]))
+            else:
+                for y in self._depts:
+                    if y.get_name() == re.sub(pattern, '', i.get_name()):
+                        y.add_course(i)
+                        break
+                    
+                    if  i != self._depts[-1].get_courses():
+                        self._depts.append(Department(
+                            re.sub(pattern, '', i.get_name()), [i]))
+                        break
+
+   
 
         self._numberOfClasses = 0
         for i in range(0, len(self._depts)):
@@ -298,6 +292,8 @@ class Department:
 
     def get_courses(self): return self._courses
 
+    def add_course(self, i): return self._courses.append(i)
+
 
 class Class:
     def __init__(self, id, dept, course):
@@ -334,12 +330,13 @@ class Class:
 
 class DisplayMgr:
     def print_available_data(self):
-        print("> All Available Data")
-        self.print_dept()
-        self.print_course()
-        self.print_room()
-        self.print_instructor()
-        self.print_meeting_times()
+        pass
+        # print("> All Available Data")
+        # self.print_dept()
+        # self.print_course()
+        # self.print_room()
+        # self.print_instructor()
+        # self.print_meeting_times()
 
     def print_dept(self):
         depts = data.get_depts()
@@ -408,7 +405,7 @@ class DisplayMgr:
         for i in range(0, len(schedules)):
             table1.append([str(i), round(schedules[i].get_fitness(
             ), 3), schedules[i].get_numbOfConflicts(), schedules[i].__str__()])
-        print(table1)
+        # print(table1)
 
     def print_schedule_as_table(self, schedule):
         classes = schedule.get_classes()
